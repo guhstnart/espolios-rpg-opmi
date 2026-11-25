@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Espólios · RPG OPMI</title>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Pirata+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="lua" aria-hidden="true"></div><div class="ondas" aria-hidden="true"><i></i><i></i></div>
+<header><img id="logo" src="logo.png" alt="" onerror="this.remove()"><h1>Espólios</h1><p>Saques, tesouros e recompensas · One Piece RPG</p></header>
+<nav class="abas"><button data-aba="rolar" class="on">Randomizar</button><button data-aba="hist">Histórico</button><button data-aba="mestre">🔒 Mestre</button></nav>
+<main class="painel">
+<section id="rolar">
+ <h2>Origem do espólio</h2><div class="chips" id="ctx"></div>
+ <h2>O que pode aparecer</h2><div id="filtros"></div>
+ <div class="barra"><label>Quantidade <input id="qtd" type="number" min="1" max="20" value="1"></label><label><input id="semrep" type="checkbox" checked> Sem repetir</label><span id="n"></span></div>
+ <button id="rolar-btn" class="rolar">⚓ Rolar espólio</button>
+ <div id="res"></div>
+</section>
+<section id="hist" hidden><div class="barra"><h2>Últimos sorteios</h2><button class="mini" id="limpar-hist">Limpar</button></div><div id="hist-l"></div></section>
+<section id="mestre" hidden><div class="chips" id="subabas"><button data-sub="itens" class="chip on">Itens</button><button data-sub="listas" class="chip">Tiers · Mares · Categorias</button><button data-sub="ctx" class="chip">Chances</button><button data-sub="dados" class="chip">Dados</button></div><div id="mestre-corpo"></div></section>
+</main>
+<dialog id="senha"><form id="sf"><h2>Área do Mestre</h2><input id="sp" type="password" placeholder="Senha" autocomplete="off"><p id="se" hidden>Senha incorreta.</p><div class="bt"><button type="button" id="sc" class="mini">Cancelar</button><button class="mini ok">Entrar</button></div></form></dialog>
+<dialog id="ed"><form id="edf"><h2 id="edt"></h2><label>Nome<input name="nome" required></label><label>Descrição<textarea name="desc" rows="4"></textarea></label><label>Tier<select name="tier"></select></label><label>Mar<select name="mar"></select></label><label>Categoria<select name="cat"></select></label><div class="bt"><button type="button" id="edc" class="mini">Cancelar</button><button class="mini ok">Salvar</button></div></form></dialog>
+<script src="app.js"></script></body></html>
