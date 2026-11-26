@@ -1,22 +1,143 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Espólios · RPG OPMI</title>
-<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Pirata+One&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css"></head><body>
-<div class="lua" aria-hidden="true"></div><div class="ondas" aria-hidden="true"><i></i><i></i></div>
-<header><img id="logo" src="logo.png" alt="" onerror="this.remove()"><h1>Espólios</h1><p>Saques, tesouros e recompensas · One Piece RPG</p></header>
-<nav class="abas"><button data-aba="rolar" class="on">Randomizar</button><button data-aba="hist">Histórico</button><button data-aba="mestre">🔒 Mestre</button></nav>
-<main class="painel">
-<section id="rolar">
- <h2>Origem do espólio</h2><div class="chips" id="ctx"></div>
- <h2>O que pode aparecer</h2><div id="filtros"></div>
- <div class="barra"><label>Quantidade <input id="qtd" type="number" min="1" max="20" value="1"></label><label><input id="semrep" type="checkbox" checked> Sem repetir</label><span id="n"></span></div>
- <button id="rolar-btn" class="rolar">⚓ Rolar espólio</button>
- <div id="res"></div>
-</section>
-<section id="hist" hidden><div class="barra"><h2>Últimos sorteios</h2><button class="mini" id="limpar-hist">Limpar</button></div><div id="hist-l"></div></section>
-<section id="mestre" hidden><div class="chips" id="subabas"><button data-sub="itens" class="chip on">Itens</button><button data-sub="listas" class="chip">Tiers · Mares · Categorias</button><button data-sub="ctx" class="chip">Chances</button><button data-sub="dados" class="chip">Dados</button></div><div id="mestre-corpo"></div></section>
-</main>
-<dialog id="senha"><form id="sf"><h2>Área do Mestre</h2><input id="sp" type="password" placeholder="Senha" autocomplete="off"><p id="se" hidden>Senha incorreta.</p><div class="bt"><button type="button" id="sc" class="mini">Cancelar</button><button class="mini ok">Entrar</button></div></form></dialog>
-<dialog id="ed"><form id="edf"><h2 id="edt"></h2><label>Nome<input name="nome" required></label><label>Descrição<textarea name="desc" rows="4"></textarea></label><label>Tier<select name="tier"></select></label><label>Mar<select name="mar"></select></label><label>Categoria<select name="cat"></select></label><div class="bt"><button type="button" id="edc" class="mini">Cancelar</button><button class="mini ok">Salvar</button></div></form></dialog>
-<script src="app.js"></script></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Espólios · One Piece: Mar Indomável</title>
+  <link rel="icon" type="image/png" href="Simbolo Rpg2.png">
+  <link rel="apple-touch-icon" href="Simbolo Rpg2.png">
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Pirata+One&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="lua" aria-hidden="true"></div>
+  <div class="ondas" aria-hidden="true"><i></i><i></i></div>
+
+  <div class="topo-bar">
+    <a class="lobby-link" href="https://guhstnart.github.io/mar-indomavel-rpg/index.html" title="Voltar ao Lobby Principal">
+      <img src="Logo-One Piece-Mar-Indomável2.png" alt="One Piece: Mar Indomável">
+      <span>← Voltar ao Lobby</span>
+    </a>
+
+    <div class="topo-controles">
+      <span id="badge-dirty" class="badge-dirty" hidden title="Você fez edições locais que ainda não foram baixadas no data.json">
+        ● Alterações não publicadas
+        <button type="button" class="mini ok" data-ex="1">Baixar JSON</button>
+      </span>
+      <button type="button" id="btn-som" class="mini" title="Ativar/Desativar efeitos sonoros">🔊 Som: ON</button>
+      <button type="button" id="btn-mar" class="mini" title="Som ambiente de ondas do mar">🌊 Mar: OFF</button>
+    </div>
+  </div>
+
+  <header>
+    <h1>Espólios</h1>
+    <p>Saques, tesouros e recompensas · One Piece: Mar Indomável</p>
+  </header>
+
+  <nav class="abas">
+    <button data-aba="rolar" class="on">Randomizar</button>
+    <button data-aba="unicos">Únicos Obtidos <span id="cnt-unicos" class="pill">0</span></button>
+    <button data-aba="hist">Histórico</button>
+    <button data-aba="mestre">🔒 Mestre</button>
+  </nav>
+
+  <main class="painel">
+    <!-- ABA RANDOMIZAR -->
+    <section id="rolar">
+      <div class="gh">
+        <h2>Presets rápidos</h2>
+        <button type="button" class="mini" id="btn-salvar-preset">+ Salvar filtro atual</button>
+      </div>
+      <div class="chips" id="presets"></div>
+
+      <h2>Origem do espólio</h2>
+      <div class="chips" id="ctx"></div>
+
+      <h2>O que pode aparecer</h2>
+      <div id="filtros"></div>
+
+      <div class="barra">
+        <label>Quantidade <input id="qtd" type="number" min="1" max="20" value="1"></label>
+        <label><input id="semrep" type="checkbox" checked> Sem repetir no saque</label>
+        <span id="n"></span>
+      </div>
+
+      <button id="rolar-btn" class="rolar">⚓ Rolar espólio</button>
+      <div id="res-resumo" class="resumo" hidden></div>
+      <div id="res"></div>
+    </section>
+
+    <!-- ABA ITENS ÚNICOS -->
+    <section id="unicos" hidden>
+      <div class="barra">
+        <h2>Itens Únicos já sorteados na campanha</h2>
+        <button type="button" class="mini" id="limpar-unicos">Restaurar todos ao pool</button>
+      </div>
+      <p class="ajuda">Itens marcados como <b>Único</b> saem de circulação assim que são sorteados, evitando duplicatas na história.</p>
+      <div id="unicos-l"></div>
+    </section>
+
+    <!-- ABA HISTÓRICO -->
+    <section id="hist" hidden>
+      <div class="barra">
+        <h2>Últimos sorteios</h2>
+        <button class="mini" id="limpar-hist">Limpar</button>
+      </div>
+      <div id="hist-l"></div>
+    </section>
+
+    <!-- ABA MESTRE -->
+    <section id="mestre" hidden>
+      <div class="chips" id="subabas">
+        <button data-sub="itens" class="chip on">Itens</button>
+        <button data-sub="listas" class="chip">Tiers · Mares · Categorias</button>
+        <button data-sub="ctx" class="chip">Origens & Chances</button>
+        <button data-sub="dados" class="chip">Publicar & Importar</button>
+      </div>
+      <div id="mestre-corpo"></div>
+    </section>
+  </main>
+
+  <!-- MODAL SENHA -->
+  <dialog id="senha">
+    <form id="sf">
+      <h2>Área do Mestre</h2>
+      <input id="sp" type="password" placeholder="Senha" autocomplete="off">
+      <p id="se" hidden>Senha incorreta.</p>
+      <div class="bt">
+        <button type="button" id="sc" class="mini">Cancelar</button>
+        <button class="mini ok">Entrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- MODAL EDITAR/CRIAR ITEM -->
+  <dialog id="ed">
+    <form id="edf">
+      <h2 id="edt"></h2>
+      <label>Nome do Item<input name="nome" required placeholder="Ex.: 🗡️ Katana Enferrujada"></label>
+      <label>Valor em Berries (B$) — opcional (aceita fixo ou faixa, ex.: 500 ou 100-300)
+        <input name="valor" placeholder="Ex.: 250 ou 50-150">
+      </label>
+      <label>Descrição / Efeito (faixas como "30 a 50 Berries" rolam na hora)
+        <textarea name="desc" rows="3"></textarea>
+      </label>
+      <div class="grid-3">
+        <label>Tier<select name="tier"></select></label>
+        <label>Mar<select name="mar"></select></label>
+        <label>Categoria<select name="cat"></select></label>
+      </div>
+      <label class="check-inline">
+        <input type="checkbox" name="unico">
+        <span><b>Item Único</b> (sai da tabela após ser sorteado na campanha)</span>
+      </label>
+      <div class="bt">
+        <button type="button" id="edc" class="mini">Cancelar</button>
+        <button class="mini ok">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
