@@ -15,8 +15,9 @@ let hist = JSON.parse(localStorage.getItem(KEY_HIST) || "[]");
 let unicosObtidos = JSON.parse(localStorage.getItem(KEY_UNI) || "[]");
 let presets = JSON.parse(localStorage.getItem(KEY_PRE) || "[]");
 let ultimoExcluido = null;
+let toastTimer = null;
 
-// ---------- Áudio WebSynth (rápido e sem arquivos externos) ----------
+// ---------- Áudio WebSynth (Efeitos, Fanfarra Rara e Som do Mar audível) ----------
 let somAtivo = localStorage.getItem("espolios-som") !== "0";
 let marAtivo = false;
 let audioCtx = null, marNode = null;
@@ -39,7 +40,7 @@ function tocarSomSaque(reroll = false) {
       osc.type = idx === notas.length - 1 ? "triangle" : "sine";
       osc.frequency.setValueAtTime(freq, now + idx * 0.045);
       gain.gain.setValueAtTime(0.001, now + idx * 0.045);
-      gain.gain.exponentialRampToValueAtTime(0.08, now + idx * 0.045 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.09, now + idx * 0.045 + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.045 + 0.16);
       osc.connect(gain);
       gain.connect(ac.destination);
@@ -49,50 +50,101 @@ function tocarSomSaque(reroll = false) {
   } catch {}
 }
 
+// Som especial de baú lendário / item único
+function tocarSomLendario() {
+  if (!somAtivo) return;
+  try {
+    const ac = getAudio();
+    const now = ac.currentTime;
+    // Acorde brilhante ascendente + brilho agudo
+    const acorde = [
+      { f: 523.25, t: 0.00, d: 0.45, type: "triangle", g: 0.11 }, // C5
+      { f: 659.25, t: 0.06, d: 0.45, type: "triangle", g: 0.11 }, // E5
+      { f: 783.99, t: 0.12, d: 0.50, type: "triangle", g: 0.12 }, // G5
+      { f: 1046.50, t: 0.18, d: 0.65, type: "sine", g: 0.14 },    // C6
+      { f: 1318.51, t: 0.25, d: 0.70, type: "sine", g: 0.10 },    // E6
+      { f: 1567.98, t: 0.32, d: 0.75, type: "sine", g: 0.08 }     // G6
+    ];
+    acorde.forEach(n => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = n.type;
+      osc.frequency.setValueAtTime(n.f, now + n.t);
+      gain.gain.setValueAtTime(0.0001, now + n.t);
+      gain.gain.exponentialRampToValueAtTime(n.g, now + n.t + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + n.d);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(now + n.t);
+      osc.stop(now + n.t + n.d + 0.02);
+    });
+  } catch {}
+}
+
 function toggleMar() {
   marAtivo = !marAtivo;
   $("#btn-mar").textContent = `🌊 Mar: ${marAtivo ? "ON" : "OFF"}`;
   $("#btn-mar").classList.toggle("ok", marAtivo);
+
   if (marAtivo) {
     try {
       const ac = getAudio();
-      const bufferSize = ac.sampleRate * 4;
+      // Ruído rosa suave (muito mais audível e natural que ruído browniano)
+      const bufferSize = ac.sampleRate * 5;
       const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
       const data = buffer.getChannelData(0);
-      let lastOut = 0;
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
-        data[i] = (lastOut + (0.02 * white)) / 1.02;
-        lastOut = data[i];
-        data[i] *= 0.35;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.06;
+        b6 = white * 0.115926;
       }
+
       const noise = ac.createBufferSource();
       noise.buffer = buffer;
       noise.loop = true;
 
       const filter = ac.createBiquadFilter();
       filter.type = "lowpass";
-      filter.frequency.value = 340;
+      filter.frequency.value = 520;
 
+      // LFO modula tanto o corte do filtro quanto o volume das ondas indo e vindo
       const lfo = ac.createOscillator();
-      const lfoGain = ac.createGain();
-      lfo.frequency.value = 0.14;
-      lfoGain.gain.value = 180;
-      lfo.connect(lfoGain);
-      lfoGain.connect(filter.frequency);
+      lfo.type = "sine";
+      lfo.frequency.value = 0.16; // ~1 onda a cada 6 segundos
 
-      const master = ac.createGain();
-      master.gain.value = 0.14;
+      const lfoFilterGain = ac.createGain();
+      lfoFilterGain.gain.value = 340; // varia filtro entre 180Hz e 860Hz
+      lfo.connect(lfoFilterGain);
+      lfoFilterGain.connect(filter.frequency);
+
+      const waveGain = ac.createGain();
+      waveGain.gain.value = 0.22;
+
+      const lfoAmpGain = ac.createGain();
+      lfoAmpGain.gain.value = 0.10;
+      lfo.connect(lfoAmpGain);
+      lfoAmpGain.connect(waveGain.gain);
 
       noise.connect(filter);
-      filter.connect(master);
-      master.connect(ac.destination);
+      filter.connect(waveGain);
+      waveGain.connect(ac.destination);
+
       noise.start();
       lfo.start();
       marNode = { noise, lfo };
     } catch {}
   } else if (marNode) {
-    try { marNode.noise.stop(); marNode.lfo.stop(); } catch {}
+    try {
+      marNode.noise.stop();
+      marNode.lfo.stop();
+    } catch {}
     marNode = null;
   }
 }
@@ -101,6 +153,24 @@ function toggleMar() {
 const cor = t => COR[Math.max(0, db.tiers.indexOf(t)) % COR.length];
 const lista = g => g === "tier" ? db.tiers : g === "mar" ? db.mares : db.categorias;
 const todos = () => ["tier", "mar", "cat"].forEach(g => sel[g] = new Set(lista(g)));
+
+const isTier5 = t => /tier\s*5/i.test(String(t || "")) || db.tiers.indexOf(t) === db.tiers.length - 1 && db.tiers.length >= 5;
+const isItemRaro = i => Boolean(i?.unico || isTier5(i?.tier));
+
+function mostrarAvisoRaro(itensRaros) {
+  if (!itensRaros.length) return;
+  const el = $("#toast-raro");
+  const nomes = itensRaros.map(i => i.nome).join(" · ");
+  const titulo = itensRaros.some(i => i.unico) && itensRaros.some(i => isTier5(i.tier))
+    ? "✨ TESOURO LENDÁRIO & ÚNICO ENCONTRADO!"
+    : itensRaros.some(i => i.unico)
+      ? "★ ITEM ÚNICO DA CAMPANHA ENCONTRADO!"
+      : "👑 RELÍQUIA TIER 5 ENCONTRADA!";
+  el.innerHTML = `${titulo}<br><small>${esc(nomes)}</small>`;
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, 4200);
+}
 
 function verificarDirty() {
   const atual = JSON.stringify(db);
@@ -122,7 +192,6 @@ function salvarPresets() {
   localStorage.setItem(KEY_PRE, JSON.stringify(presets));
 }
 
-// Rola faixas numéricas como "30 a 50 Berries", "70-150 Berries" ou "100 a 250 B$"
 function rolarFaixasTexto(texto) {
   if (!texto) return "";
   return texto.replace(/(\d+(?:\.\d+)?)\s*(?:a|-|–|até)\s*(\d+(?:\.\d+)?)\s*(berries|berry|b\$)/gi, (_, minS, maxS, moeda) => {
@@ -134,7 +203,6 @@ function rolarFaixasTexto(texto) {
   });
 }
 
-// Calcula valor numérico em B$ para o item sorteado
 function calcularValorBerries(valorStr) {
   if (!valorStr) return 0;
   const s = String(valorStr).trim();
@@ -153,7 +221,6 @@ function calcularValorBerries(valorStr) {
 function instanciarItem(item) {
   const descRolada = rolarFaixasTexto(item.desc || "");
   let valorRolado = calcularValorBerries(item.valor);
-  // Se o item não tem campo valor dedicado, mas a descrição rolou Berries, extrai para somar
   if (!valorRolado && descRolada) {
     const m = descRolada.match(/(\d+(?:\.\d+)?)\s*(?:berries|berry|b\$)/i);
     if (m) valorRolado = Number(m[1].replace(/\./g, "")) || 0;
@@ -306,8 +373,9 @@ function registrarUnicoSeNecessario(item) {
 
 function card(i, idx, rerolled = false) {
   const descFinal = i.descRolada ?? i.desc;
+  const raro = isItemRaro(i);
   return `
-    <div class="card ${rerolled ? "reroll-anim" : ""}" style="--c:${cor(i.tier)};animation-delay:${rerolled ? 0 : idx * 35}ms">
+    <div class="card ${raro ? "raro" : ""} ${rerolled ? "reroll-anim" : ""}" style="--c:${cor(i.tier)};animation-delay:${rerolled ? 0 : idx * 35}ms">
       <div>
         <div class="card-topo">
           <b>${esc(i.nome)}</b>
@@ -368,7 +436,14 @@ function rolar() {
     return;
   }
 
-  tocarSomSaque(false);
+  const raros = res.filter(isItemRaro);
+  if (raros.length) {
+    tocarSomLendario();
+    mostrarAvisoRaro(raros);
+  } else {
+    tocarSomSaque(false);
+  }
+
   hist.unshift({
     h: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
     ctx,
@@ -387,14 +462,21 @@ function rerollCard(idx) {
   if (semRep) {
     res.forEach((it, i) => { if (i !== idx) ex.add(it.nome); });
   }
-  ex.add(res[idx].nome); // evita cair exatamente o mesmo item no reroll
+  ex.add(res[idx].nome);
 
   const novo = sortear(ex) || sortear(semRep ? new Set(res.filter((_, i) => i !== idx).map(x => x.nome)) : null);
   if (!novo) return alert("Não há outro item disponível nos filtros atuais para substituir este.");
 
   res[idx] = novo;
   registrarUnicoSeNecessario(novo);
-  tocarSomSaque(true);
+
+  if (isItemRaro(novo)) {
+    tocarSomLendario();
+    mostrarAvisoRaro([novo]);
+  } else {
+    tocarSomSaque(true);
+  }
+
   desenhar();
   mostrar(idx);
 }

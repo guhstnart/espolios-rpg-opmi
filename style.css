@@ -7,15 +7,25 @@ body{margin:0;min-height:100vh;color:#fff;font:19px/1.5 "Alegreya",Georgia,serif
 .ondas i:last-child{top:24px;animation-duration:9s;animation-direction:reverse;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0 60Q150 100 300 60T600 60T900 60T1200 60V120H0Z' fill='%2305213c' fill-opacity='.85'/%3E%3C/svg%3E")}
 @keyframes o{to{background-position-x:1200px}}
 
-/* Barra superior com Logo -> Lobby e controles */
-.topo-bar{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;padding:.6rem 1.2rem;background:rgba(10,16,44,.55);border-bottom:1px solid rgba(201,205,224,.22);backdrop-filter:blur(4px)}
-.lobby-link{display:inline-flex;align-items:center;gap:.65rem;text-decoration:none;color:#f6dc96;font-weight:700;font-size:.95rem;transition:transform .15s ease,filter .15s ease}
-.lobby-link img{height:44px;width:auto;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
-.lobby-link:hover{transform:translateY(-1px);filter:brightness(1.12)}
-.topo-controles{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+/* Barra superior com Logo ampliada + Tooltip deslizando de baixo */
+.topo-bar{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;padding:.55rem 1.4rem;background:rgba(10,16,44,.6);border-bottom:1px solid rgba(201,205,224,.22);backdrop-filter:blur(4px)}
+.lobby-link{position:relative;display:inline-flex;flex-direction:column;align-items:center;text-decoration:none;cursor:pointer;padding:.15rem .3rem;border-radius:8px}
+.lobby-link img{height:68px;width:auto;display:block;filter:drop-shadow(0 3px 8px rgba(0,0,0,.75));transition:transform .24s cubic-bezier(.22,1.25,.36,1),filter .24s ease}
+.lobby-link:hover img,.lobby-link:focus-visible img{transform:scale(1.07) translateY(-2px);filter:drop-shadow(0 6px 14px rgba(246,220,150,.55)) brightness(1.08)}
+.lobby-link:active img{transform:scale(.97)}
+
+.lobby-tip{position:absolute;top:100%;left:50%;transform:translate(-50%,-8px) scale(.92);opacity:0;pointer-events:none;white-space:nowrap;background:#1a1938;border:2px solid #f6dc96;color:#f6dc96;font-size:.82rem;font-weight:700;letter-spacing:.04em;padding:.22rem .75rem;border-radius:99px;box-shadow:0 6px 16px rgba(0,0,0,.65);transition:opacity .22s ease,transform .24s cubic-bezier(.22,1.2,.36,1);z-index:20}
+.lobby-tip::before{content:"";position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-bottom-color:#f6dc96}
+.lobby-link:hover .lobby-tip,.lobby-link:focus-visible .lobby-tip{opacity:1;transform:translate(-50%,6px) scale(1)}
+
+.topo-controles{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
 
 .badge-dirty{display:inline-flex;align-items:center;gap:.45rem;background:#4a2511;border:2px solid #fbbf24;color:#fde68a;font-size:.85rem;font-weight:700;padding:.15rem .55rem;border-radius:4px;animation:pulso 2s infinite}
 @keyframes pulso{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.4)}50%{box-shadow:0 0 0 6px rgba(251,191,36,0)}}
+
+/* Toast / Aviso de Item Lendário ou Único */
+.toast-raro{position:fixed;top:1.1rem;left:50%;transform:translateX(-50%);z-index:99;background:linear-gradient(135deg,#2b1c4d,#432818);border:2px solid #fbbf24;color:#fef08a;font:700 1.05rem "Alegreya",serif;padding:.55rem 1.3rem;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.75),0 0 22px rgba(251,191,36,.45);text-align:center;animation:toastIn .35s cubic-bezier(.22,1.25,.36,1) both}
+@keyframes toastIn{0%{opacity:0;transform:translate(-50%,-18px) scale(.9)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
 
 header,.abas,main{position:relative;z-index:1}
 header{text-align:center;padding:.8rem 1rem .4rem}
@@ -56,9 +66,37 @@ input,select,textarea{font:inherit;color:#fff;background:#2c2b57;border:2px soli
 
 .resumo{text-align:center;margin:.5rem 0 .2rem;padding:.35rem .8rem;background:rgba(24,23,50,.75);border:1px solid #f6dc96;border-radius:6px;color:#f6dc96;font-size:.95rem}
 
-#res{display:grid;grid-template-columns:repeat(auto-fit,minmax(16.5rem,1fr));gap:.8rem;margin-top:.8rem}
-.card{background:#25244a;border:2px solid #c9cde0;border-top:6px solid var(--c);padding:.8rem 1rem;display:flex;flex-direction:column;justify-content:space-between;animation:cartaEntra .28s cubic-bezier(.22,1.15,.36,1) both}
+#res{display:grid;grid-template-columns:repeat(auto-fit,minmax(16.5rem,1fr));gap:.85rem;margin-top:.8rem}
+.card{position:relative;overflow:hidden;background:#25244a;border:2px solid #c9cde0;border-top:6px solid var(--c);padding:.85rem 1rem;display:flex;flex-direction:column;justify-content:space-between;animation:cartaEntra .28s cubic-bezier(.22,1.15,.36,1) both}
 .card.reroll-anim{animation:cartaTroca .26s ease-out both}
+
+/* Destaque brilhante com gradiente na cor do Tier para Tier 5 ou Item Único */
+.card.raro{
+  border-color:var(--c);
+  background:linear-gradient(135deg,#25244a 35%,color-mix(in srgb,var(--c) 26%,#1a1938) 65%,#25244a 95%);
+  background-size:220% 220%;
+  box-shadow:0 0 18px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 14px color-mix(in srgb,var(--c) 22%,transparent);
+  animation:cartaEntra .32s cubic-bezier(.22,1.15,.36,1) both,brilhoRaro 2.8s ease-in-out infinite;
+}
+.card.raro::after{
+  content:"";
+  position:absolute;
+  top:-50%;left:-75%;
+  width:50%;height:200%;
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,.28),transparent);
+  transform:rotate(25deg);
+  pointer-events:none;
+  animation:reflexoRaro 3.2s ease-in-out infinite;
+}
+@keyframes brilhoRaro{
+  0%,100%{background-position:0% 50%;box-shadow:0 0 14px color-mix(in srgb,var(--c) 45%,transparent)}
+  50%{background-position:100% 50%;box-shadow:0 0 26px color-mix(in srgb,var(--c) 85%,transparent)}
+}
+@keyframes reflexoRaro{
+  0%,55%{left:-75%}
+  100%{left:140%}
+}
+
 @keyframes cartaEntra{
   0%{opacity:0;transform:translateY(10px) scale(.95)}
   100%{opacity:1;transform:translateY(0) scale(1)}
@@ -104,5 +142,5 @@ textarea.g{width:100%;height:10rem}
 @media(max-width:600px){
   h1{font-size:2.4rem}
   .painel{padding:1rem .8rem}
-  .lobby-link img{height:36px}
+  .lobby-link img{height:54px}
 }
