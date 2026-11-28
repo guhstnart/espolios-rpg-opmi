@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banco de Skills · Mar Indomável RPG</title>
+<link rel="icon" type="image/png" href="SimboloRpg2.png">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Pirata+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skills.css"></head><body>
+<div class="estrelas" aria-hidden="true"></div>
+<button id="coroa" title="Modo Mestre">👑</button>
+<header><a href="index.html" class="voltar">← Lobby</a><h1>Banco de Skills</h1>
+ <div class="bar"><input id="q" type="search" placeholder="Buscar skill, custo, requisito…" aria-label="Buscar">
+ <select id="pre"><option value="">Pré-requisito: qualquer</option><option value="sem">Sem pré-requisito</option><option value="com">Com pré-requisito</option></select>
+ <div class="vis"><button data-vis="cat" class="on">Por categoria</button><button data-vis="evo">Por evolução</button></div></div>
+ <div id="niveis" class="chips"></div></header>
+<div class="layout"><aside id="lat"></aside><main>
+ <div id="mtool" hidden><button class="mini ok" id="nova">+ Nova skill</button><button class="mini" id="ncat">+ Categoria</button><button class="mini" id="exp">⬇ Baixar skills.json</button><button class="mini" id="zera">↺ Descartar edições locais</button><small>Modo Mestre: edições ficam neste navegador até você publicar o skills.json.</small></div>
+ <div id="lista"></div></main></div>
+<dialog id="senha"><form id="sf"><h2>Modo Mestre</h2><input id="sp" type="password" placeholder="Senha" autocomplete="off"><p id="se" hidden>Senha incorreta.</p><div class="bt"><button type="button" id="sc" class="mini">Cancelar</button><button class="mini ok">Entrar</button></div></form></dialog>
+<dialog id="det"><div class="det"><div id="detc"></div><div id="dett"></div></div></dialog>
+<dialog id="ed"><form id="edf"><h2 id="edt"></h2><label>Nome<input name="nome" required></label><label>Categoria<select name="cat"></select></label><label>Nível<select name="nivel"></select></label><label>Custo (texto livre: Estamina, Vida…)<input name="custo" placeholder="Ex.: 3 de Estamina"></label><label>Como desbloquear<input name="req" placeholder="Ex.: Aprender com um Mestre"></label><label>Pré-requisitos (Ctrl para vários)<select name="prereq" multiple size="5"></select></label><label>Descrição<textarea name="desc" rows="5"></textarea></label><div class="bt"><button type="button" id="edc" class="mini">Cancelar</button><button class="mini ok">Salvar</button></div></form></dialog>
+<script src="skills.js"></script></body></html>
